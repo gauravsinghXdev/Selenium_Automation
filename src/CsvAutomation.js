@@ -15,25 +15,43 @@ export default function CsvAutomation() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const uploadRes = await fetch("http://localhost:5001/api/upload-csv", {
+    const uploadRes = await fetch("https://f5b1-2402-8100-2704-8b51-a8a1-98a1-b7ec-a662.ngrok-free.app/api/upload-csv", {
       method: "POST",
       body: formData,
     });
 
     const uploadData = await uploadRes.json();
-
     if (uploadData.success) {
-      const blobName = uploadData.blobName;
-      const batchRes = await fetch("http://localhost:5001/api/batch-register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ blobName }),
-      });
-
-      const result = await batchRes.json();
-      console.log("Batch registration result:", result);
+      localStorage.setItem("uploadedBlobName", uploadData.blobName);
+      fetchAndParseCSV(uploadData.blobName);
     }
+
+ 
   }
+  const fetchAndParseCSV = async (blobName) => {
+    const response = await fetch(`https://f5b1-2402-8100-2704-8b51-a8a1-98a1-b7ec-a662.ngrok-free.app/api/get-csv/${blobName}`);
+    const text = await response.text();
+  
+    const lines = text.trim().split("\n");
+    const parsedRows = lines.slice(1).map(line => {
+      const [countryCodeRaw, phoneRaw, proxyRaw] = line.split(",");
+      return {
+        countryCode: countryCodeRaw?.trim() || "",
+        phone: phoneRaw?.trim() || "",
+        proxy: proxyRaw?.trim() || "",
+      };
+    }).filter(row => row.phone);
+  
+    setRows(parsedRows);
+    const initialStatus = {};
+    parsedRows.forEach(r => (initialStatus[r.phone] = "Pending"));
+    setStatus(initialStatus);
+    setCurrentIndex(0);
+    setRunning(false);
+    stopRef.current = false;
+  };
+  
+
 
   function handleFile(e) {
     const file = e.target.files[0];
@@ -68,6 +86,13 @@ export default function CsvAutomation() {
   }
 
   useEffect(() => {
+    const blobName = localStorage.getItem("uploadedBlobName");
+    if (blobName) {
+      fetchAndParseCSV(blobName);
+    }
+  }, []);
+
+  useEffect(() => {
     async function runAutomation() {
       for (let i = currentIndex; i < rows.length; i++) {
         if (stopRef.current) {
@@ -80,7 +105,7 @@ export default function CsvAutomation() {
         setStatus((s) => ({ ...s, [row.phone]: "Processing" }));
 
         try {
-          const res = await fetch("http://localhost:5001/api/register", {
+          const res = await fetch("https://f5b1-2402-8100-2704-8b51-a8a1-98a1-b7ec-a662.ngrok-free.app/api/register", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(row),
