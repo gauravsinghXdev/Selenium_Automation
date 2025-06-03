@@ -60,28 +60,71 @@ export default function CsvAutomation({ onLogout }) {
 
  
   }
+
   const fetchAndParseCSV = async (blobName) => {
-    const response = await fetch(`https://d10e-2405-201-3039-2809-6c6c-2295-945c-fe0e.ngrok-free.app/api/get-csv/${blobName}`);
-    const text = await response.text();
+    try {
+      const response = await fetch(`https://d10e-2405-201-3039-2809-6c6c-2295-945c-fe0e.ngrok-free.app/api/get-csv/${encodeURIComponent(blobName)}`, {
+        method: "GET",
+        headers: {
+          "Accept": "text/csv",
+          "ngrok-skip-browser-warning": "true"
+        },
+      });
   
-    const lines = text.trim().split("\n");
-    const parsedRows = lines.slice(1).map(line => {
-      const [countryCodeRaw, phoneRaw, proxyRaw] = line.split(",");
-      return {
-        countryCode: countryCodeRaw?.trim() || "",
-        phone: phoneRaw?.trim() || "",
-        proxy: proxyRaw?.trim() || "",
-      };
-    }).filter(row => row.phone);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch CSV: ${response.status} ${response.statusText}`);
+      }
   
-    setRows(parsedRows);
-    const initialStatus = {};
-    parsedRows.forEach(r => (initialStatus[r.phone] = "Pending"));
-    setStatus(initialStatus);
-    setCurrentIndex(0);
-    setRunning(false);
-    stopRef.current = false;
+      const text = await response.text();
+      const lines = text.trim().split("\n");
+  
+      const parsedRows = lines.slice(1).map(line => {
+        const [countryCodeRaw, phoneRaw, proxyRaw] = line.split(",");
+        return {
+          countryCode: countryCodeRaw?.trim() || "",
+          phone: phoneRaw?.trim() || "",
+          proxy: proxyRaw?.trim() || "",
+        };
+      }).filter(row => row.phone);
+  
+      setRows(parsedRows);
+  
+      const initialStatus = {};
+      parsedRows.forEach(r => (initialStatus[r.phone] = "Pending"));
+      setStatus(initialStatus);
+  
+      setCurrentIndex(0);
+      setRunning(false);
+      stopRef.current = false;
+    } catch (error) {
+      console.error("Error fetching or parsing CSV:", error);
+      // Optionally show an alert or update UI with error state
+    }
   };
+
+  
+  // const fetchAndParseCSV = async (blobName) => {
+  //   const response = await fetch(`http://localhost:5001/api/get-csv/${blobName}`);
+  //   const text = await response.text();
+  
+  //   const lines = text.trim().split("\n");
+  //   const parsedRows = lines.slice(1).map(line => {
+  //     const [countryCodeRaw, phoneRaw, proxyRaw] = line.split(",");
+  //     return {
+  //       countryCode: countryCodeRaw?.trim() || "",
+  //       phone: phoneRaw?.trim() || "",
+  //       proxy: proxyRaw?.trim() || "",
+  //     };
+  //   }).filter(row => row.phone);
+  
+  //   setRows(parsedRows);
+  //   const initialStatus = {};
+  //   parsedRows.forEach(r => (initialStatus[r.phone] = "Pending"));
+  //   setStatus(initialStatus);
+  //   setCurrentIndex(0);
+  //   setRunning(false);
+  //   stopRef.current = false;
+  // };
   
 
 
