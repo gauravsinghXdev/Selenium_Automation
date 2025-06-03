@@ -46,7 +46,7 @@ export default function CsvAutomation({ onLogout }) {
     const formData = new FormData();
     formData.append("file", file);
 
-    const uploadRes = await fetch("https://f5b1-2402-8100-2704-8b51-a8a1-98a1-b7ec-a662.ngrok-free.app/api/upload-csv", {
+    const uploadRes = await fetch("https://d10e-2405-201-3039-2809-6c6c-2295-945c-fe0e.ngrok-free.app/api/upload-csv", {
       method: "POST",
       body: formData,
     });
@@ -61,7 +61,7 @@ export default function CsvAutomation({ onLogout }) {
  
   }
   const fetchAndParseCSV = async (blobName) => {
-    const response = await fetch(`http://localhost:5001/api/get-csv/${blobName}`);
+    const response = await fetch(`https://d10e-2405-201-3039-2809-6c6c-2295-945c-fe0e.ngrok-free.app/api/get-csv/${blobName}`);
     const text = await response.text();
   
     const lines = text.trim().split("\n");
@@ -137,7 +137,7 @@ export default function CsvAutomation({ onLogout }) {
     //     setStatus((s) => ({ ...s, [row.phone]: "Processing" }));
 
     //     try {
-    //       const res = await fetch("https://f5b1-2402-8100-2704-8b51-a8a1-98a1-b7ec-a662.ngrok-free.app/api/register", {
+    //       const res = await fetch("https://d10e-2405-201-3039-2809-6c6c-2295-945c-fe0e.ngrok-free.app/api/register", {
     //         method: "POST",
     //         headers: { "Content-Type": "application/json" },
     //         body: JSON.stringify(row),
@@ -173,7 +173,7 @@ export default function CsvAutomation({ onLogout }) {
         });
         setStatus(newStatus);
     
-        const response = await fetch("https://f5b1-2402-8100-2704-8b51-a8a1-98a1-b7ec-a662.ngrok-free.app/api/batch-register", {
+        const response = await fetch("https://d10e-2405-201-3039-2809-6c6c-2295-945c-fe0e.ngrok-free.app/api/batch-register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ blobName }),

@@ -36,7 +36,7 @@ export default function SignInSignUp({ onAuthSuccess }) {
 
     try {
       const endpoint = isSignUp ? '/api/auth/register' : '/api/auth/login';
-      const url = `https://f5b1-2402-8100-2704-8b51-a8a1-98a1-b7ec-a662.ngrok-free.app${endpoint}`;
+      const url = `https://d10e-2405-201-3039-2809-6c6c-2295-945c-fe0e.ngrok-free.app${endpoint}`;
       console.log('Making request to:', url);
       
       const requestBody = {

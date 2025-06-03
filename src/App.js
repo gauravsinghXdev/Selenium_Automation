@@ -10,7 +10,7 @@ export default function App() {
     const token = localStorage.getItem('token');
     if (token) {
       // Verify token with backend
-      fetch('http://localhost:5001/api/auth/verify', {
+      fetch('https://d10e-2405-201-3039-2809-6c6c-2295-945c-fe0e.ngrok-free.app/api/auth/verify', {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
