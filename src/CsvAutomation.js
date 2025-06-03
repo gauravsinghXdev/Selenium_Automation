@@ -4,7 +4,37 @@ import { FiPlay, FiStopCircle } from 'react-icons/fi';
 import { RiRestartFill } from "react-icons/ri";
 import "./App.css";
 
-export default function CsvAutomation() {
+function LogoutButton({ onLogout }) {
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    onLogout && onLogout();
+  };
+
+  return (
+    <button
+      onClick={handleLogout}
+      style={{
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        padding: '10px 20px',
+        backgroundColor: '#6A0DAD',
+        color: '#FFEB3B',
+        border: '2px solid #FFEB3B',
+        borderRadius: '4px',
+        cursor: 'pointer',
+        fontWeight: 'bold',
+        zIndex: 9999,
+        fontSize: '16px',
+        boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+      }}
+    >
+      Logout
+    </button>
+  );
+}
+
+export default function CsvAutomation({ onLogout }) {
   const [rows, setRows] = useState([]);
   const [status, setStatus] = useState({});
   const [running, setRunning] = useState(false);
@@ -215,84 +245,83 @@ export default function CsvAutomation() {
 
 
   return (
-    <>
-<h1
-  style={{
-    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-    fontSize: "2.5rem",
-    fontWeight: "700",
-    color: "#FFF",           // bright yellow text
-    backgroundColor: "#6A0DAD", // rich purple background
-    padding: "1rem 2rem",
-    textAlign: "center",
-    margin: 0,
-    letterSpacing: "1.5px",
-    boxShadow: "0 2px 5px rgba(106, 13, 173, 0.7)", // purple shadow
-    userSelect: "none",
-  }}
->
-  📄 CSV Phone Registration Automation
-</h1>
-    <div className="container">
+    <div style={{ position: 'relative', minHeight: '100vh' }}>
+      <LogoutButton onLogout={onLogout} />
+      <h1
+        style={{
+          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+          fontSize: "2.5rem",
+          fontWeight: "700",
+          color: "#FFF",           // bright yellow text
+          backgroundColor: "#6A0DAD", // rich purple background
+          padding: "1rem 2rem",
+          textAlign: "center",
+          margin: 0,
+          letterSpacing: "1.5px",
+          boxShadow: "0 2px 5px rgba(106, 13, 173, 0.7)", // purple shadow
+          userSelect: "none",
+        }}
+      >
+        📄 CSV Phone Registration Automation
+      </h1>
+      <div className="container">
+        <DownloadReportButton />
 
+        <label className="csv-upload-button">
+          📤 Choose CSV File
+          <input
+            type="file"
+            accept=".csv"
+            onChange={handleFile}
+            className="hidden-file-input"
+            style={{ display: 'none' }}
+            />
+        </label>
 
-      <DownloadReportButton />
+        <div className="controls">
+          <button onClick={handlePlay} disabled={running || rows.length === 0} className="icon-button">
+            <FiPlay size={24} />
+            <span>Play</span>
+          </button>
 
-      <label className="csv-upload-button">
-        📤 Choose CSV File
-        <input
-          type="file"
-          accept=".csv"
-          onChange={handleFile}
-          className="hidden-file-input"
-          style={{ display: 'none' }}
-          />
-      </label>
+          <button onClick={handleStop} disabled={!running} className="icon-button">
+            <FiStopCircle size={24} />
+            <span>Stop</span>
+          </button>
 
-      <div className="controls">
-        <button onClick={handlePlay} disabled={running || rows.length === 0} className="icon-button">
-          <FiPlay size={24} />
-          <span>Play</span>
-        </button>
+          <button onClick={handleRestart} disabled={rows.length === 0} className="icon-button">
+            <RiRestartFill size={24} />
+            <span>Restart</span>
+          </button>
 
-        <button onClick={handleStop} disabled={!running} className="icon-button">
-          <FiStopCircle size={24} />
-          <span>Stop</span>
-        </button>
+        </div>
 
-        <button onClick={handleRestart} disabled={rows.length === 0} className="icon-button">
-          <RiRestartFill size={24} />
-          <span>Restart</span>
-        </button>
-
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Country Code</th>
-            <th>Phone</th>
-            <th>Proxy</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(({ countryCode, phone, proxy }, idx) => (
-            <tr
-            key={`${phone}-${idx}`}
-            className={idx === currentIndex && running ? "active" : ""}
-            >
-              <td>{countryCode}</td>
-              <td>{phone}</td>
-              <td>{proxy}</td>
-              <td className={`status-${status[phone]?.toLowerCase()}`}>
-                {status[phone]}
-              </td>
+        <table>
+          <thead>
+            <tr>
+              <th>Country Code</th>
+              <th>Phone</th>
+              <th>Proxy</th>
+              <th>Status</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map(({ countryCode, phone, proxy }, idx) => (
+              <tr
+              key={`${phone}-${idx}`}
+              className={idx === currentIndex && running ? "active" : ""}
+              >
+                <td>{countryCode}</td>
+                <td>{phone}</td>
+                <td>{proxy}</td>
+                <td className={`status-${status[phone]?.toLowerCase()}`}>
+                  {status[phone]}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
-          </>
   );
 }

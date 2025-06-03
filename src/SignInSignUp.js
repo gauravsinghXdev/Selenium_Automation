@@ -8,37 +8,87 @@ export default function SignInSignUp({ onAuthSuccess }) {
     confirmPassword: "",
   });
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError("");
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
+    console.log('Form submitted');
+    setIsLoading(true);
+    setError("");
 
     // Basic validation
     if (!form.email || !form.password || (isSignUp && !form.confirmPassword)) {
       setError("Please fill all fields");
+      setIsLoading(false);
       return;
     }
 
     if (isSignUp && form.password !== form.confirmPassword) {
       setError("Passwords do not match");
+      setIsLoading(false);
       return;
     }
 
-    // TODO: call your backend API for sign in / sign up here
-    // For now, simulate success:
-    console.log(isSignUp ? "Signing Up" : "Signing In", form);
+    try {
+      const endpoint = isSignUp ? '/api/auth/register' : '/api/auth/login';
+      const url = `http://localhost:5001${endpoint}`;
+      console.log('Making request to:', url);
+      
+      const requestBody = {
+        email: form.email,
+        password: form.password,
+      };
+      console.log('Request body:', requestBody);
 
-    onAuthSuccess && onAuthSuccess(form.email);
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type'
+        },
+        mode: 'cors',
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `Server error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('Response data:', data);
+
+      // Store the token in localStorage
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        onAuthSuccess && onAuthSuccess(form.email);
+      } else {
+        throw new Error('No token received from server');
+      }
+    } catch (err) {
+      console.error('Authentication error:', err);
+      if (err.message.includes('Failed to fetch')) {
+        setError('Unable to connect to the server. Please make sure the server is running at http://localhost:5001');
+      } else {
+        setError(err.message || 'An error occurred during authentication');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
     <div
       style={{
-        height: "100vh",         // full viewport height
+        height: "100vh",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -62,9 +112,19 @@ export default function SignInSignUp({ onAuthSuccess }) {
           {isSignUp ? "Sign Up" : "Sign In"}
         </h2>
 
-        {error && <p style={{ color: "#FF5252" }}>{error}</p>}
+        {error && (
+          <p style={{ 
+            color: "#FF5252",
+            backgroundColor: "rgba(255, 82, 82, 0.1)",
+            padding: "8px",
+            borderRadius: "4px",
+            marginBottom: "1rem"
+          }}>
+            {error}
+          </p>
+        )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <label style={{ display: "block", marginBottom: 6 }}>
             Email:
             <input
@@ -81,6 +141,7 @@ export default function SignInSignUp({ onAuthSuccess }) {
                 border: "none",
               }}
               required
+              disabled={isLoading}
             />
           </label>
 
@@ -100,6 +161,7 @@ export default function SignInSignUp({ onAuthSuccess }) {
                 border: "none",
               }}
               required
+              disabled={isLoading}
             />
           </label>
 
@@ -120,6 +182,7 @@ export default function SignInSignUp({ onAuthSuccess }) {
                   border: "none",
                 }}
                 required
+                disabled={isLoading}
               />
             </label>
           )}
@@ -134,10 +197,12 @@ export default function SignInSignUp({ onAuthSuccess }) {
               fontWeight: "700",
               border: "none",
               borderRadius: 4,
-              cursor: "pointer",
+              cursor: isLoading ? "not-allowed" : "pointer",
+              opacity: isLoading ? 0.7 : 1,
             }}
+            disabled={isLoading}
           >
-            {isSignUp ? "Sign Up" : "Sign In"}
+            {isLoading ? "Processing..." : (isSignUp ? "Sign Up" : "Sign In")}
           </button>
         </form>
 
@@ -146,9 +211,11 @@ export default function SignInSignUp({ onAuthSuccess }) {
           <span
             style={{ textDecoration: "underline", fontWeight: "700" }}
             onClick={() => {
-              setError("");
-              setIsSignUp(!isSignUp);
-              setForm({ email: "", password: "", confirmPassword: "" });
+              if (!isLoading) {
+                setError("");
+                setIsSignUp(!isSignUp);
+                setForm({ email: "", password: "", confirmPassword: "" });
+              }
             }}
           >
             {isSignUp ? "Sign In" : "Sign Up"}
