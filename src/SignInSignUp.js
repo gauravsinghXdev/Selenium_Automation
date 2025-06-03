@@ -51,7 +51,7 @@ export default function SignInSignUp({ onAuthSuccess }) {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'Access-Control-Allow-Origin': ['*', 'https://f5b1-2402-8100-2704-8b51-a8a1-98a1-b7ec-a662.ngrok-free.app'],
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS, GET',
           'Access-Control-Allow-Headers': 'Content-Type'
         },
         mode: 'cors',
