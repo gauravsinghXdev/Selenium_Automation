@@ -9,6 +9,7 @@ export default function CsvAutomation() {
   const [status, setStatus] = useState({});
   const [running, setRunning] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [uploadConfig, setUploadConfig ] = useState()
   const stopRef = useRef(false);
 
   async function uploadToBackend(file) {
@@ -22,6 +23,7 @@ export default function CsvAutomation() {
 
     const uploadData = await uploadRes.json();
     if (uploadData.success) {
+      setUploadConfig(uploadData)
       localStorage.setItem("uploadedBlobName", uploadData.blobName);
       fetchAndParseCSV(uploadData.blobName);
     }
@@ -29,7 +31,7 @@ export default function CsvAutomation() {
  
   }
   const fetchAndParseCSV = async (blobName) => {
-    const response = await fetch(`https://f5b1-2402-8100-2704-8b51-a8a1-98a1-b7ec-a662.ngrok-free.app/api/get-csv/${blobName}`);
+    const response = await fetch(`http://localhost:5001/api/get-csv/${blobName}`);
     const text = await response.text();
   
     const lines = text.trim().split("\n");
@@ -93,42 +95,80 @@ export default function CsvAutomation() {
   }, []);
 
   useEffect(() => {
-    async function runAutomation() {
-      for (let i = currentIndex; i < rows.length; i++) {
-        if (stopRef.current) {
-          setCurrentIndex(i);
-          setRunning(false);
-          break;
-        }
+    // async function runAutomation() {
+    //   for (let i = currentIndex; i < rows.length; i++) {
+    //     if (stopRef.current) {
+    //       setCurrentIndex(i);
+    //       setRunning(false);
+    //       break;
+    //     }
 
-        const row = rows[i];
-        setStatus((s) => ({ ...s, [row.phone]: "Processing" }));
+    //     const row = rows[i];
+    //     setStatus((s) => ({ ...s, [row.phone]: "Processing" }));
 
-        try {
-          const res = await fetch("https://f5b1-2402-8100-2704-8b51-a8a1-98a1-b7ec-a662.ngrok-free.app/api/register", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(row),
-          });
-          const result = await res.json();
-          await new Promise((r) => setTimeout(r, 3000));
+    //     try {
+    //       const res = await fetch("https://f5b1-2402-8100-2704-8b51-a8a1-98a1-b7ec-a662.ngrok-free.app/api/register", {
+    //         method: "POST",
+    //         headers: { "Content-Type": "application/json" },
+    //         body: JSON.stringify(row),
+    //       });
+    //       const result = await res.json();
+    //       await new Promise((r) => setTimeout(r, 3000));
 
-          if (result.success) {
-            setStatus((s) => ({ ...s, [row.phone]: "Success" }));
-            await new Promise((r) => setTimeout(r, 4000));
-          } else {
-            setStatus((s) => ({ ...s, [row.phone]: "Failed" }));
-          }
-        } catch (err) {
-          setStatus((s) => ({ ...s, [row.phone]: "Failed" }));
-        }
+    //       if (result.success) {
+    //         setStatus((s) => ({ ...s, [row.phone]: "Success" }));
+    //         await new Promise((r) => setTimeout(r, 4000));
+    //       } else {
+    //         setStatus((s) => ({ ...s, [row.phone]: "Failed" }));
+    //       }
+    //     } catch (err) {
+    //       setStatus((s) => ({ ...s, [row.phone]: "Failed" }));
+    //     }
 
-        setCurrentIndex(i + 1);
+    //     setCurrentIndex(i + 1);
+    //   }
+
+    //   setRunning(false);
+    // }
+
+    const runAutomation = async () => {
+      try {
+        const blobName = uploadConfig?.blobName;
+        if (!blobName) return;
+    
+        // Set all statuses to "Processing"
+        const newStatus = { ...status };
+        rows.forEach(row => {
+          newStatus[row.phone] = "Processing";
+        });
+        setStatus(newStatus);
+    
+        const response = await fetch("https://f5b1-2402-8100-2704-8b51-a8a1-98a1-b7ec-a662.ngrok-free.app/api/batch-register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ blobName }),
+        });
+    
+        const result = await response.json();
+    
+        // Update statuses based on response
+        const updatedStatus = { ...status };
+        result.data?.forEach(({ number, status }) => {
+          updatedStatus[number] = status.charAt(0).toUpperCase() + status.slice(1); // Capitalize status
+        });
+    
+        setStatus(updatedStatus);
+      } catch (error) {
+        console.error("Batch registration failed:", error);
+        rows.forEach(row => {
+          setStatus(s => ({ ...s, [row.phone]: "Failed" }));
+        });
+      } finally {
+        setRunning(false);
       }
-
-      setRunning(false);
-    }
-
+    };
+    
+    
     if (running) {
       runAutomation();
     }
