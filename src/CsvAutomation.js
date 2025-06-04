@@ -41,12 +41,14 @@ export default function CsvAutomation({ onLogout }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [uploadConfig, setUploadConfig ] = useState()
   const stopRef = useRef(false);
+  const backendUrl = process.env.REACT_APP_BACKEND_URL
+  console.log("backend", backendUrl)
 
   async function uploadToBackend(file) {
     const formData = new FormData();
     formData.append("file", file);
 
-    const uploadRes = await fetch("https://d10e-2405-201-3039-2809-6c6c-2295-945c-fe0e.ngrok-free.app/api/upload-csv", {
+    const uploadRes = await fetch(`${backendUrl}/api/upload-csv`, {
       method: "POST",
       body: formData,
     });
@@ -63,7 +65,7 @@ export default function CsvAutomation({ onLogout }) {
 
   const fetchAndParseCSV = async (blobName) => {
     try {
-      const response = await fetch(`https://d10e-2405-201-3039-2809-6c6c-2295-945c-fe0e.ngrok-free.app/api/get-csv/${encodeURIComponent(blobName)}`, {
+      const response = await fetch(`${backendUrl}/api/get-csv/${encodeURIComponent(blobName)}`, {
         method: "GET",
         headers: {
           "Accept": "text/csv",
@@ -98,7 +100,7 @@ export default function CsvAutomation({ onLogout }) {
       stopRef.current = false;
     } catch (error) {
       console.error("Error fetching or parsing CSV:", error);
-      // Optionally show an alert or update UI with error state
+      
     }
   };
 
@@ -180,7 +182,7 @@ export default function CsvAutomation({ onLogout }) {
     //     setStatus((s) => ({ ...s, [row.phone]: "Processing" }));
 
     //     try {
-    //       const res = await fetch("https://d10e-2405-201-3039-2809-6c6c-2295-945c-fe0e.ngrok-free.app/api/register", {
+    //       const res = await fetch(`${backendUrl}/api/register", {
     //         method: "POST",
     //         headers: { "Content-Type": "application/json" },
     //         body: JSON.stringify(row),
@@ -216,11 +218,12 @@ export default function CsvAutomation({ onLogout }) {
         });
         setStatus(newStatus);
     
-        const response = await fetch("https://d10e-2405-201-3039-2809-6c6c-2295-945c-fe0e.ngrok-free.app/api/batch-register", {
+        const response = await fetch(`${backendUrl}/api/batch-register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ blobName }),
-        });
+          body: JSON.stringify({ rows })
+
+                                                                                });
     
         const result = await response.json();
     

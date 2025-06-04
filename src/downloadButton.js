@@ -2,11 +2,14 @@
 import React from 'react';
 
 const DownloadReportButton = () => {
+  const backendUrl = process.env.BACKEND_URL
   const handleDownload = async () => {
     try {
-      const response = await fetch('https://d10e-2405-201-3039-2809-6c6c-2295-945c-fe0e.ngrok-free.app/api/report', {
+      const response = await fetch(`${backendUrl}/api/report`, {
         method: 'GET',
-        credentials: 'include', // if you need to send cookies
+        headers: {
+          'ngrok-skip-browser-warning': 'true'
+        }
       });
 
       if (!response.ok) {
